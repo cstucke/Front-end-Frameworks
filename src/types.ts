@@ -11,7 +11,7 @@ export interface Movie {
     vote_count: number;
     popularity: number;
     adult: boolean;
-};
+}
 
 export type SortOption = 'popularity' | 'rating' | 'release_date' | 'title';
 export type ViewMode = 'grid' | 'list';
