@@ -16,9 +16,11 @@ const App = () => {
 
   return (
     <div className="app-layout">
-      <h1>Movie App</h1>
-      <SearchBar query={query} onChange={setQuery} />
-      <MovieList movies={filteredMovies} />
+      <main className="main-container">
+        <h1>Movie App</h1>
+        <SearchBar query={query} onChange={setQuery} />
+        <MovieList movies={filteredMovies} />
+      </main>
     </div>
   );
 };
