@@ -1,15 +1,18 @@
 import { useState } from "react"
-import { Movie } from "../types"
+import { Movie, Genre } from "../types"
 import { getPosterUrl } from "../data/sampleMovies"
-import { getGenreNames } from "../data/genres"
 
 type MovieCardProps = {
     movie: Movie;
+    genres: Genre[];
     onClick?: () => void;
 };
 
-const MovieCard = ({ movie, onClick }: MovieCardProps) => {
+const MovieCard = ({ movie, genres, onClick }: MovieCardProps) => {
     const [isFavourite, setIsFavourite] = useState(false);
+    const genreNames = movie.genre_ids
+        .map((id) => genres.find((g) => g.id === id)?.name)
+        .filter((name): name is string => Boolean(name));
 
     return (
         <section className="movie-card" onClick={onClick}>
@@ -52,7 +55,7 @@ const MovieCard = ({ movie, onClick }: MovieCardProps) => {
                     <span>{movie.vote_count ? `${movie.vote_count.toLocaleString()} votes` : "Upcoming"}</span>
                 </div>
                 <div className="movie-genres-tags">
-                    {getGenreNames(movie.genre_ids).slice(0, 2).map((genre) => (
+                    {genreNames.slice(0, 2).map((genre) => (
                         <span key={genre} className="genre-tag">{genre}</span>
                     ))}
                 </div>
