@@ -4,11 +4,11 @@ import { getPosterUrl } from "../data/sampleMovies"
 
 type MovieCardProps = {
     movie: Movie;
-    genres: Genre[];
+    genres?: Genre[];
     onClick?: () => void;
 };
 
-const MovieCard = ({ movie, genres, onClick }: MovieCardProps) => {
+const MovieCard = ({ movie, genres = [], onClick }: MovieCardProps) => {
     const [isFavourite, setIsFavourite] = useState(false);
     const genreNames = movie.genre_ids
         .map((id) => genres.find((g) => g.id === id)?.name)

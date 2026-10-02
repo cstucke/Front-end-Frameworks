@@ -19,7 +19,7 @@ export function useGenres(url: string) {
                     throw new Error(`Response status: ${response.status}`);
                 }
                 const result = await response.json();
-                setGenres(result.genres);
+                setGenres(result.genres ?? []);
             } catch (error) {
                 console.error(error instanceof Error ? error.message : error);
                 setError("Something went wrong.");

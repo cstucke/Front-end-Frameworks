@@ -3,10 +3,10 @@ import MovieCard from "./MovieCard";
 
 type MovieListProps = {
     movies: Movie[];
-    genres: Genre[];
+    genres?: Genre[];
 };
 
-const MovieList = ({ movies, genres }: MovieListProps) => {
+const MovieList = ({ movies, genres = [] }: MovieListProps) => {
     if (movies.length === 0) {
         return <p>No movies found.</p>;
     }
