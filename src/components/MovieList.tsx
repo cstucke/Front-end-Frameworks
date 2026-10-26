@@ -4,9 +4,10 @@ import MovieCard from "./MovieCard";
 type MovieListProps = {
     movies: Movie[];
     genres?: Genre[];
+    onMovieClick: (movie: Movie) => void;
 };
 
-const MovieList = ({ movies, genres = [] }: MovieListProps) => {
+const MovieList = ({ movies, genres = [], onMovieClick }: MovieListProps) => {
     if (movies.length === 0) {
         return <p>No movies found.</p>;
     }
@@ -14,7 +15,7 @@ const MovieList = ({ movies, genres = [] }: MovieListProps) => {
     return (
         <div className="movies-grid">
             {movies.map((movie) => (
-                <MovieCard key={movie.id} movie={movie} genres={genres} />
+                <MovieCard key={movie.id} movie={movie} genres={genres} onMovieClick={onMovieClick} />
             ))}
         </div>
     );

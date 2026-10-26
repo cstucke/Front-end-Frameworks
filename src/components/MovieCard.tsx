@@ -5,17 +5,17 @@ import { getPosterUrl } from "../data/sampleMovies"
 type MovieCardProps = {
     movie: Movie;
     genres?: Genre[];
-    onClick?: () => void;
+    onMovieClick: (movie: Movie) => void;
 };
 
-const MovieCard = ({ movie, genres = [], onClick }: MovieCardProps) => {
+const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
     const [isFavourite, setIsFavourite] = useState(false);
     const genreNames = movie.genre_ids
         .map((id) => genres.find((g) => g.id === id)?.name)
         .filter((name): name is string => Boolean(name));
 
     return (
-        <section className="movie-card" onClick={onClick}>
+        <section className="movie-card">
             <div className="poster-wrapper">
                 <img className="poster-img" src={getPosterUrl(movie.poster_path)} alt={movie.title} loading="lazy" />
                 <div className="poster-overlay">
@@ -46,6 +46,14 @@ const MovieCard = ({ movie, genres = [], onClick }: MovieCardProps) => {
                             </svg>
                         </button>
                     </div>
+                    <span
+                        className="quick-view-hint"
+                        onClick={() => onMovieClick(movie)}
+                        role="button"
+                        tabIndex={0}
+                    >
+                        View Details
+                    </span>
                 </div>
             </div>
             <div className="movie-card-info">
