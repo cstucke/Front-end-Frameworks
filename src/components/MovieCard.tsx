@@ -1,6 +1,6 @@
-import { useState } from "react"
 import { Movie, Genre } from "../types"
 import { getPosterUrl } from "../data/sampleMovies"
+import { useAppContext } from "../context/AppContext"
 
 type MovieCardProps = {
     movie: Movie;
@@ -9,7 +9,7 @@ type MovieCardProps = {
 };
 
 const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
-    const [isFavourite, setIsFavourite] = useState(false);
+    const { toggleFavorite, isFavorite } = useAppContext();
     const genreNames = movie.genre_ids
         .map((id) => genres.find((g) => g.id === id)?.name)
         .filter((name): name is string => Boolean(name));
@@ -27,18 +27,18 @@ const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
                             {movie.vote_average.toFixed(1)}
                         </span>
                         <button
-                            className={`favorite-btn${isFavourite ? " is-favorite" : ""}`}
-                            title={isFavourite ? "Remove from Favourites" : "Add to Favourites"}
+                            className={`favorite-btn${isFavorite(movie.id) ? " is-favorite" : ""}`}
+                            title={isFavorite(movie.id) ? "Remove from Favourites" : "Add to Favourites"}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                setIsFavourite((prev) => !prev);
+                                toggleFavorite(movie);
                             }}
                         >
                             <svg
                                 width="16"
                                 height="16"
                                 viewBox="0 0 24 24"
-                                fill={isFavourite ? "currentColor" : "none"}
+                                fill={isFavorite(movie.id) ? "currentColor" : "none"}
                                 stroke="currentColor"
                                 strokeWidth="2"
                             >
