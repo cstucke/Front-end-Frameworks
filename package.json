@@ -17,6 +17,7 @@
     "test:m3": "vitest run src/test/milestone-03.test.tsx"
   },
   "dependencies": {
+    "hls.js": "^1.7.4",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "react": "^18.3.1",
