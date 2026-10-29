@@ -104,7 +104,7 @@ select {
   width: 100%;
   max-width: 1360px;
   margin: 0 auto;
-  padding: 0 24px 48px;
+  padding: 28px 24px 48px;
   flex: 1;
 }
 
