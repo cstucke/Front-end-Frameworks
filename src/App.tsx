@@ -6,6 +6,8 @@ import SearchBar from "./components/SearchBar";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import WatchPage from "./pages/WatchPage";
+import { Watch } from "lucide-react";
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,6 +23,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<HomePage searchQuery={searchQuery} />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/watch" element={<WatchPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>

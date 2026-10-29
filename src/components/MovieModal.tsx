@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Movie } from "../types";
 import { getPosterUrl, getBackdropUrl } from "../data/sampleMovies";
 import { getGenreNames } from "../data/genres";
@@ -38,6 +39,11 @@ const MovieModal = ({ movie, onClose }: MovieModalProps) => {
                             ))}
                         </div>
                         <p className="modal-overview">{movie.overview}</p>
+                        <div className="modal-footer-actions">
+                            <Link to="/watch" className="btn-secondary">
+                                Play
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
