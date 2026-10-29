@@ -6,7 +6,7 @@ import { Link } from "react-router-dom"
 type MovieCardProps = {
     movie: Movie;
     genres?: Genre[];
-    onMovieClick: (movie: Movie) => void;
+    onMovieClick?: (movie: Movie) => void;
 };
 
 const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
@@ -52,14 +52,9 @@ const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
                             <polygon points="8.5 5.5 18.5 12 8.5 18.5"></polygon>
                         </svg>
                     </Link>
-                    <span
-                        className="quick-view-hint"
-                        onClick={() => onMovieClick(movie)}
-                        role="button"
-                        tabIndex={0}
-                    >
+                    <button className="quick-view-hint" onClick={() => onMovieClick?.(movie)}>
                         View Details
-                    </span>
+                    </button>
                 </div>
             </div>
             <div className="movie-card-info">

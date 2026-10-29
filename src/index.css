@@ -523,8 +523,8 @@ select {
   inset: 0;
   background: linear-gradient(to top,
       rgba(10, 12, 16, 0.92) 0%,
-      rgba(10, 12, 16, 0.3) 100%,
-      rgba(10, 12, 16, 0.6) 50%);
+      rgba(10, 12, 16, 0.6) 50%,
+      rgba(10, 12, 16, 0.3) 100%, );
   opacity: 0;
   transition: opacity var(--transition-fast);
   display: flex;
@@ -638,7 +638,7 @@ select {
   --media-range-thumb-box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
-.watch-player media-control-bar > :hover {
+.watch-player media-control-bar> :hover {
   --media-icon-color: var(--accent);
 }
 
