@@ -40,7 +40,7 @@ const MovieModal = ({ movie, onClose }: MovieModalProps) => {
                         </div>
                         <p className="modal-overview">{movie.overview}</p>
                         <div className="modal-footer-actions">
-                            <Link to="/watch" className="btn-secondary">
+                            <Link to="/watch" state={{ movie }} className="btn-secondary">
                                 Play
                             </Link>
                         </div>

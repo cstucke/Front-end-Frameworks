@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BrowserRouter, Routes, Route, NavLink } from "react-router-dom";
+import { BrowserRouter, Routes, Route, NavLink, Outlet } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
 import HeaderComponent from "./components/HeaderComp";
 import SearchBar from "./components/SearchBar";
@@ -7,7 +7,6 @@ import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import WatchPage from "./pages/WatchPage";
-import { Watch } from "lucide-react";
 
 const App = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,15 +15,23 @@ const App = () => {
     <AppProvider>
       <BrowserRouter>
         <div className="app-layout">
-          <HeaderComponent
-            searchQuery={searchQuery}
-            onChange={setSearchQuery}
-          />
           <Routes>
-            <Route path="/" element={<HomePage searchQuery={searchQuery} />} />
-            <Route path="/about" element={<AboutPage />} />
+            <Route
+              element={
+                <>
+                  <HeaderComponent
+                    searchQuery={searchQuery}
+                    onChange={setSearchQuery}
+                  />
+                  <Outlet />
+                </>
+              }
+            >
+              <Route path="/" element={<HomePage searchQuery={searchQuery} />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="*" element={<NotFoundPage />} />
+            </Route>
             <Route path="/watch" element={<WatchPage />} />
-            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
       </BrowserRouter>
