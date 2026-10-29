@@ -1,6 +1,7 @@
 import { Movie, Genre } from "../types"
 import { getPosterUrl } from "../data/sampleMovies"
 import { useAppContext } from "../context/AppContext"
+import { Link } from "react-router-dom"
 
 type MovieCardProps = {
     movie: Movie;
@@ -46,6 +47,11 @@ const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
                             </svg>
                         </button>
                     </div>
+                    <Link to="/watch" className="play-btn" aria-label="Play">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="6" strokeLinejoin="round">
+                            <polygon points="8.5 5.5 18.5 12 8.5 18.5"></polygon>
+                        </svg>
+                    </Link>
                     <span
                         className="quick-view-hint"
                         onClick={() => onMovieClick(movie)}

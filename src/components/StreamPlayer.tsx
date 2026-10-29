@@ -17,7 +17,7 @@ const StreamPlayer = () => {
         return () => hls.destroy();
     }, []);
 
-    return <video ref={videoRef} className="poster-img" controls />;
+    return <video ref={videoRef} className="watch-player" controls />;
 };
 
 export default StreamPlayer;

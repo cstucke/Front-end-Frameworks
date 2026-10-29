@@ -80,6 +80,7 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
 button {
   font-family: inherit;
   cursor: pointer;
@@ -87,6 +88,7 @@ button {
   background: none;
   color: inherit;
 }
+
 input,
 select {
   font-family: inherit;
@@ -221,7 +223,7 @@ select {
   font-size: 0.75rem;
 }
 
-.search-input:not(:placeholder-shown) ~ .search-clear-btn {
+.search-input:not(:placeholder-shown)~.search-clear-btn {
   opacity: 1;
   visibility: visible;
 }
@@ -506,22 +508,23 @@ select {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition:
+    transform 0.4s ease,
+    filter 0.4s ease;
 }
 
 .movie-card:hover .poster-img {
   transform: scale(1.05);
+  filter: blur(6px);
 }
 
 .poster-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    rgba(10, 12, 16, 0.92) 0%,
-    rgba(10, 12, 16, 0.3) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(to top,
+      rgba(10, 12, 16, 0.92) 0%,
+      rgba(10, 12, 16, 0.3) 100%,
+      rgba(10, 12, 16, 0.6) 50%);
   opacity: 0;
   transition: opacity var(--transition-fast);
   display: flex;
@@ -595,6 +598,35 @@ select {
   padding: 8px 16px;
   border-radius: 20px;
   box-shadow: 0 4px 12px var(--accent-glow);
+}
+
+.play-btn {
+  align-self: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: transform var(--transition-fast);
+}
+
+.play-btn:hover {
+  transform: scale(1.1);
+}
+
+.watch-player {
+  display: block;
+  width: 100%;
+  max-height: 75vh;
+  aspect-ratio: 16 / 9;
+  background-color: #000000;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-modal);
 }
 
 .movie-card-info {
@@ -774,12 +806,10 @@ select {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to top,
-    var(--bg-modal) 0%,
-    rgba(19, 21, 30, 0.6) 60%,
-    transparent 100%
-  );
+  background: linear-gradient(to top,
+      var(--bg-modal) 0%,
+      rgba(19, 21, 30, 0.6) 60%,
+      transparent 100%);
 }
 
 .modal-body {
@@ -922,6 +952,7 @@ select {
   font-size: 1.2rem;
   font-weight: 700;
 }
+
 .empty-text {
   color: var(--text-muted);
   max-width: 400px;
@@ -941,12 +972,10 @@ select {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.05),
+      transparent);
   animation: skeleton-sweep 1.5s infinite;
 }
 
@@ -954,6 +983,7 @@ select {
   0% {
     transform: translateX(-100%);
   }
+
   100% {
     transform: translateX(100%);
   }
@@ -1008,6 +1038,7 @@ select {
   .btn-icon-label span:not(.count-badge) {
     display: none;
   }
+
   .movies-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
