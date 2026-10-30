@@ -1,56 +1,66 @@
-import { Link } from "react-router-dom";
-import { Movie } from "../types";
-import { getPosterUrl, getBackdropUrl } from "../data/sampleMovies";
-import { getGenreNames } from "../data/genres";
+import { useEffect, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import MovieInfo from "./MovieInfo";
+import { useMovieDetails } from "../hooks/useMovieDetails";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useScrollLock } from "../hooks/useOverlay";
 
-type MovieModalProps = {
-    movie: Movie;
-    onClose: () => void;
-};
+const MovieModal = () => {
+    const { id } = useParams();
+    const { state } = useLocation();
+    const navigate = useNavigate();
+    const { movie, details, error } = useMovieDetails(id);
+    const dialogRef = useRef<HTMLDivElement>(null);
+    // Read during render: the page behind turns inert on commit, which drops its focus
+    const opener = useRef(document.activeElement as HTMLElement | null);
+    const shown = movie ?? state?.movie;
 
-const MovieModal = ({ movie, onClose }: MovieModalProps) => {
+    const close = () => navigate(-(state?.depth ?? 1));
+
+    useScrollLock();
+    useDocumentTitle(shown?.title);
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") close();
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    });
+
+    // Focus moves into the dialog and back to whatever opened it
+    useEffect(() => {
+        const returnTo = opener.current;
+        dialogRef.current?.focus();
+        return () => returnTo?.focus({ preventScroll: true });
+    }, []);
+
+    // A title opened from "More Like This" starts from the top
+    useEffect(() => {
+        if (dialogRef.current) dialogRef.current.scrollTop = 0;
+    }, [id]);
+
     return (
-        <div className="modal-overlay active" onClick={onClose}>
+        <div className="modal-overlay active" onClick={close}>
             <div
+                ref={dialogRef}
                 className="modal-dialog"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="modal-movie-title"
+                tabIndex={-1}
                 onClick={(e) => e.stopPropagation()}
             >
-                <button className="modal-close-btn" aria-label="Close" onClick={onClose}>
+                <button className="modal-close-btn" aria-label="Close" onClick={close}>
                     ×
                 </button>
-                <div
-                    className="modal-backdrop-hero"
-                    style={{ backgroundImage: `url('${getBackdropUrl(movie.backdrop_path)}')` }}
-                ></div>
-                <div className="modal-body">
-                    <img className="modal-poster" src={getPosterUrl(movie.poster_path)} alt={movie.title} />
-                    <div className="modal-content-details">
-                        <h2 className="modal-title" id="modal-movie-title">{movie.title}</h2>
-                        <div className="modal-meta-row">
-                            <span className="rating-badge">
-                                <svg viewBox="0 0 24 24">
-                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                                </svg>
-                                {movie.vote_average.toFixed(1)}
-                            </span>
-                            <span className="modal-meta-item">{movie.release_date}</span>
-                        </div>
-                        <div className="movie-genres-tags">
-                            {getGenreNames(movie.genre_ids).map((genre) => (
-                                <span key={genre} className="genre-tag">{genre}</span>
-                            ))}
-                        </div>
-                        <p className="modal-overview">{movie.overview}</p>
-                        <div className="modal-footer-actions">
-                            <Link to="/watch" state={{ movie }} className="btn-secondary">
-                                Play
-                            </Link>
-                        </div>
+                {shown && <MovieInfo key={id} movie={shown} details={details} />}
+                {!shown && !error && <div className="modal-backdrop-hero"></div>}
+                {!shown && error && (
+                    <div className="empty-state">
+                        <p className="empty-text">We couldn&rsquo;t load this movie.</p>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAppContext } from "../context/AppContext";
 import SearchBar from "./SearchBar";
 
@@ -9,26 +9,40 @@ type HeaderProps = {
 
 const HeaderComponent = ({ searchQuery, onChange }: HeaderProps) => {
     const { theme, toggleTheme, favorites } = useAppContext();
+    const { pathname } = useLocation();
+    const navigate = useNavigate();
+
+    // Results show on Home, so searching from any other page goes there
+    const handleSearch = (value: string) => {
+        onChange(value);
+        if (value && pathname !== "/") navigate("/");
+    };
 
     return (
         <header className="site-header">
             <div className="header-inner">
                 <div className="header-actions">
-                    <NavLink to="/" end className="brand-logo">
+                    <NavLink to="/" end className="brand-logo" onClick={() => onChange("")}>
                         <div className="logo-dot"></div>
                         <span className="logo-text">CINE&middot;GRID</span>
                     </NavLink>
                     <nav className="header-actions">
-                        <NavLink to="/" end className="genre-pill">Home</NavLink>
+                        <NavLink to="/" end className="genre-pill" onClick={() => onChange("")}>Home</NavLink>
                         <NavLink to="/about" className="genre-pill">About</NavLink>
                     </nav>
                 </div>
 
-                <SearchBar query={searchQuery} onChange={onChange} />
+                <SearchBar query={searchQuery} onChange={handleSearch} />
 
                 <div className="header-actions">
-                    <button className="btn-icon-label">Watchlist {favorites.length}</button>
-                    <button className="theme-toggle-btn" onClick={toggleTheme}>
+                    <NavLink to="/watchlist" className="btn-icon-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span>Watchlist</span>
+                        <span className="count-badge">{favorites.length}</span>
+                    </NavLink>
+                    <button className="theme-toggle-btn" aria-label="Toggle theme" onClick={toggleTheme}>
                         {theme === "dark" ? (
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <circle cx="12" cy="12" r="5" />

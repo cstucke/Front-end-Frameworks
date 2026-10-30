@@ -18,6 +18,45 @@ export interface Genre {
     name: string;
 }
 
+export interface CastMember {
+    id: number;
+    name: string;
+    character: string;
+    profile_path: string | null;
+}
+
+export interface CrewMember {
+    id: number;
+    name: string;
+    job: string;
+}
+
+export interface Video {
+    key: string;
+    name: string;
+    site: string;
+    type: string;
+    official: boolean;
+}
+
+export interface MovieDetails extends Movie {
+    tagline: string;
+    runtime: number | null;
+    genres: Genre[];
+    credits: { cast: CastMember[]; crew: CrewMember[] };
+    videos: { results: Video[] };
+    recommendations: { results: Movie[] };
+    release_dates: {
+        results: { iso_3166_1: string; release_dates: { certification: string }[] }[];
+    };
+}
+
+export interface WatchProgress {
+    movie: Movie;
+    time: number;
+    duration: number;
+}
+
 export type SortOption = 'popularity' | 'rating' | 'release_date' | 'title';
 export type ViewMode = 'grid' | 'list';
 export type Theme = 'dark' | 'light';

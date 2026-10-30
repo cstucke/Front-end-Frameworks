@@ -1,14 +1,21 @@
 import { createContext, useContext, useReducer, useEffect } from "react";
-import type { Movie, Theme } from "../types";
+import type { Movie, Theme, WatchProgress } from "../types";
+
+// Under this many seconds a title doesn't count as started
+const MIN_WATCHED_SECONDS = 5;
+// Past this share of the runtime a title counts as finished
+const FINISHED_RATIO = 0.95;
 
 type State = {
     theme: Theme;
     favorites: Movie[];
+    progress: WatchProgress[]; // most recently watched first
 };
 
 type Action =
     | { type: "SET_THEME" }
-    | { type: "TOGGLE_FAVOURITE"; payload: Movie };
+    | { type: "TOGGLE_FAVOURITE"; payload: Movie }
+    | { type: "SAVE_PROGRESS"; payload: WatchProgress };
 
 // 2. Reducer — pure function, no side effects
 const reducer = (state: State, action: Action): State => {
@@ -27,6 +34,15 @@ const reducer = (state: State, action: Action): State => {
                     : [...state.favorites, action.payload], // add
             };
         }
+        case "SAVE_PROGRESS": {
+            const { movie, time, duration } = action.payload;
+            if (time < MIN_WATCHED_SECONDS) return state;
+            const others = state.progress.filter((p) => p.movie.id !== movie.id);
+            return {
+                ...state,
+                progress: time / duration >= FINISHED_RATIO ? others : [action.payload, ...others],
+            };
+        }
         default:
             return state;
     }
@@ -39,6 +55,9 @@ type AppContextType = {
     favorites: Movie[];
     toggleFavorite: (movie: Movie) => void;
     isFavorite: (id: number) => boolean;
+    progress: WatchProgress[];
+    saveProgress: (movie: Movie, time: number, duration: number) => void;
+    getProgress: (id: number) => WatchProgress | undefined;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -52,9 +71,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.getItem("cinegrid_favorites") || "[]"
     );
 
+    const initialProgress: WatchProgress[] = JSON.parse(
+        localStorage.getItem("cinegrid_progress") || "[]"
+    );
+
     const [state, dispatch] = useReducer(reducer, {
         theme: initialTheme,
         favorites: initialFavorites,
+        progress: initialProgress,
     });
 
     // Sync to localStorage + DOM whenever theme changes
@@ -68,6 +92,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.setItem("cinegrid_favorites", JSON.stringify(state.favorites));
     }, [state.favorites]);
 
+    // Sync to localStorage whenever watch progress changes
+    useEffect(() => {
+        localStorage.setItem("cinegrid_progress", JSON.stringify(state.progress));
+    }, [state.progress]);
+
     const toggleTheme = () => dispatch({ type: "SET_THEME" });
 
     const toggleFavorite = (movie: Movie) =>
@@ -75,6 +104,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     const isFavorite = (id: number) =>
         state.favorites.some((m) => m.id === id);
+
+    const saveProgress = (movie: Movie, time: number, duration: number) =>
+        dispatch({ type: "SAVE_PROGRESS", payload: { movie, time, duration } });
+
+    const getProgress = (id: number) =>
+        state.progress.find((p) => p.movie.id === id);
 
     return (
         <AppContext.Provider
@@ -84,6 +119,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
                 favorites: state.favorites,
                 toggleFavorite,
                 isFavorite,
+                progress: state.progress,
+                saveProgress,
+                getProgress,
             }}
         >
             {children}

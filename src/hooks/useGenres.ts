@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Genre } from "../types";
+import { tmdbFetch } from "../data/tmdb";
 
 export function useGenres(url: string) {
     const [genres, setGenres] = useState<Genre[]>([]);
@@ -9,16 +10,7 @@ export function useGenres(url: string) {
     useEffect(() => {
         async function getData() {
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        Authorization: `Bearer ${import.meta.env.VITE_TMDB_API_KEY}`,
-                        accept: "application/json",
-                    },
-                });
-                if (!response.ok) {
-                    throw new Error(`Response status: ${response.status}`);
-                }
-                const result = await response.json();
+                const result = await tmdbFetch(url);
                 setGenres(result.genres ?? []);
             } catch (error) {
                 console.error(error instanceof Error ? error.message : error);

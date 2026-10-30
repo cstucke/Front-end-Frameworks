@@ -1,16 +1,18 @@
 import { Movie, Genre } from "../types"
-import { getPosterUrl } from "../data/sampleMovies"
+import { getPosterUrl, getPlaceholderPoster } from "../data/sampleMovies"
 import { useAppContext } from "../context/AppContext"
+import { useOverlayState } from "../hooks/useOverlay"
 import { Link } from "react-router-dom"
 
 type MovieCardProps = {
     movie: Movie;
     genres?: Genre[];
-    onMovieClick?: (movie: Movie) => void;
 };
 
-const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
-    const { toggleFavorite, isFavorite } = useAppContext();
+const MovieCard = ({ movie, genres = [] }: MovieCardProps) => {
+    const { toggleFavorite, isFavorite, getProgress } = useAppContext();
+    const overlayState = useOverlayState();
+    const progress = getProgress(movie.id);
     const genreNames = movie.genre_ids
         .map((id) => genres.find((g) => g.id === id)?.name)
         .filter((name): name is string => Boolean(name));
@@ -18,7 +20,15 @@ const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
     return (
         <section className="movie-card">
             <div className="poster-wrapper">
-                <img className="poster-img" src={getPosterUrl(movie.poster_path)} alt={movie.title} loading="lazy" />
+                <img
+                    className="poster-img"
+                    src={getPosterUrl(movie.poster_path)}
+                    alt={movie.title}
+                    loading="lazy"
+                    onError={(e) => {
+                        e.currentTarget.src = getPlaceholderPoster(movie.title);
+                    }}
+                />
                 <div className="poster-overlay">
                     <div className="card-top-badges">
                         <span className="rating-badge">
@@ -47,15 +57,25 @@ const MovieCard = ({ movie, genres = [], onMovieClick }: MovieCardProps) => {
                             </svg>
                         </button>
                     </div>
-                    <Link to="/watch" state={{ movie }} className="play-btn" aria-label="Play">
+                    <Link to={`/watch/${movie.id}`} state={overlayState(movie)} className="play-btn" aria-label={`Play ${movie.title}`}>
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="6" strokeLinejoin="round">
                             <polygon points="8.5 5.5 18.5 12 8.5 18.5"></polygon>
                         </svg>
                     </Link>
-                    <button className="quick-view-hint" onClick={() => onMovieClick?.(movie)}>
+                    <Link to={`/movies/${movie.id}`} state={overlayState(movie)} className="quick-view-hint">
                         View Details
-                    </button>
+                    </Link>
                 </div>
+                {progress && (
+                    <div
+                        className="progress-track"
+                        role="progressbar"
+                        aria-label={`${movie.title} progress`}
+                        aria-valuenow={Math.round((progress.time / progress.duration) * 100)}
+                    >
+                        <div className="progress-fill" style={{ width: `${(progress.time / progress.duration) * 100}%` }}></div>
+                    </div>
+                )}
             </div>
             <div className="movie-card-info">
                 <h2 className="movie-card-title">{movie.title}</h2>

@@ -8,13 +8,18 @@ A movie browser built with React and TypeScript on the TMDB API, with a full-pag
 
 ## Features
 
-- **Popular movies, endlessly:** the home grid loads TMDB's popular list and fetches the next page as you scroll near the bottom.
-- **Search:** filters the loaded movies by title as you type.
-- **Movie details:** hovering a card shows a Play button and View Details. The details view shows the backdrop, rating, release date, genres and overview.
-- **Favourites:** the heart on each card saves a movie. The Watchlist count in the header updates, and favourites are kept between visits.
+- **Browse rows:** Home opens on a featured movie, then horizontal rows such as Trending, Top Rated and Coming Soon. A title appears once on the page, even when TMDB lists it several times.
+- **Popular movies, endlessly:** below the rows, a grid fetches the next page as you scroll near the bottom.
+- **Genres:** the genre pills swap the rows for one genre, sorted by popularity, rating, date or title. The genre is in the URL (`/?genre=35`).
+- **Search:** searches all of TMDB as you type, from any page.
+- **Title pages:** every movie has its own link, `/movies/:id`, with the runtime, age rating, director, cast, trailer and similar movies. Inside the app it opens over the current page; opened directly, it's a full page.
+- **Watchlist:** the heart saves a movie to the `/watchlist` page and a row on Home. It's kept between visits.
+- **Continue Watching:** the player remembers where you stopped. Unfinished movies get a row on Home and a progress bar, Play becomes Resume, and a "More Like" row follows the last one you watched.
 - **Light and dark themes**, also kept between visits.
-- **Streaming player:** Play opens the video on a full page. A back arrow and the title sit at the top; the seek bar, time remaining, play/pause, volume and fullscreen sit at the bottom. The controls hide when the mouse is idle.
+- **Streaming player:** `/watch/:id` plays the video on a full page and starts by itself. A back arrow, the title and the current quality sit at the top; the seek bar, ±10 s, volume, speed, picture-in-picture and fullscreen sit at the bottom. The controls hide when the mouse is idle.
 - **Pause screen:** pausing for two seconds dims the video and shows the movie's details.
+- **Up Next:** at the end of a movie, a 10-second countdown starts a similar one.
+- **Keeps your place:** closing a title or leaving the player returns to the same spot on the page, with nothing reloaded.
 
 ---
 
@@ -24,8 +29,8 @@ A movie browser built with React and TypeScript on the TMDB API, with a full-pag
 |---|---|
 | React 18 + TypeScript | UI and static typing |
 | Vite | Dev server and build |
-| React Router | Pages: Home, About, Watch, 404 |
-| Context API + `useReducer` | Theme and favourites, saved to `localStorage` |
+| React Router | Pages: Home, About, Movie, Watch, Watchlist, 404 |
+| Context API + `useReducer` | Theme, favourites and watch progress, saved to `localStorage` |
 | hls.js | HLS video playback |
 | Media Chrome | Player controls |
 | Vitest + Testing Library | Tests |
@@ -69,9 +74,10 @@ npm run test             # Tests in watch mode
 npm run test:run         # Run all tests once
 npm run test:m2          # Milestone 2 suite
 npm run test:m3          # Milestone 3 suite
+npm run test:features    # Rows, title pages, search, watchlist, resume
 ```
 
-The milestone 1 suite (`npm run test:m1`) was written before favourites moved into the global context in Session 5, so it no longer passes. The milestone 2 and 3 suites pass.
+The milestone 1 suite (`npm run test:m1`) was written before favourites moved into the global context in Session 5, so it no longer passes. The milestone 2, milestone 3 and features suites pass.
 
 ---
 
@@ -91,13 +97,13 @@ TMDB doesn't host films, so every movie plays the same demo video. The point is 
 
 ```
 src/
-├── components/     # HeaderComp, SearchBar, MovieList, MovieCard, MovieModal, StreamPlayer
-├── context/        # AppContext: theme and favourites (useReducer + localStorage)
-├── data/           # genre map, image URL helpers, sample movies
-├── hooks/          # useMovies (paged, appends results), useGenres
-├── pages/          # HomePage, AboutPage, WatchPage, NotFoundPage
-├── test/           # milestone test suites
-├── App.tsx         # routes
+├── components/     # header, Billboard, MovieRow, InfiniteGrid, MovieCard, MovieInfo, MovieModal, StreamPlayer, ...
+├── context/        # AppContext: theme, favourites and watch progress (useReducer + localStorage)
+├── data/           # TMDB fetch helper, genre map, image URL helpers, sample movies
+├── hooks/          # useMovies (paged, appends results), useBrowseRows, useMovieDetails, useGenres, ...
+├── pages/          # HomePage, AboutPage, MoviePage, WatchPage, WatchlistPage, NotFoundPage
+├── test/           # milestone and feature test suites
+├── App.tsx         # routes, including the overlay routes for titles and the player
 └── index.css       # all styles, with light/dark theme variables
 vanilaVersion/      # the original plain-JavaScript version the React app was ported from
 ```
@@ -106,10 +112,9 @@ vanilaVersion/      # the original plain-JavaScript version the React app was po
 
 ## Known limitations
 
-- The movie's title and pause details reach the player through the link, so opening `/watch` directly (new tab, shared link) plays the video without them.
-- Leaving the player returns to the top of the home page.
-- Search only covers the movies already loaded, not the whole TMDB catalogue.
-- The Watchlist button shows the count; there's no watchlist page yet.
+- Every movie plays the same demo video, so Continue Watching tracks each title separately but the picture is always Big Buck Bunny.
+- Opening `/watch/:id` directly (new tab, shared link) may wait for a press of Play, because browsers can block video that starts by itself.
+- The watchlist and watch progress live in the browser's `localStorage`, so they don't follow you to another device.
 - On iPhones, fullscreen switches to the system player, so the custom controls don't show there.
 
 ---
