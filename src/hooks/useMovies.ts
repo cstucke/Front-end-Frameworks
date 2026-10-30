@@ -3,10 +3,12 @@ import { Movie } from "../types";
 
 export function useMovies(url: string) {
     const [movies, setMovies] = useState<Movie[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadedUrl, setLoadedUrl] = useState("");
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        let ignore = false;
+
         async function getData() {
             try {
                 const response = await fetch(url, {
@@ -19,17 +21,26 @@ export function useMovies(url: string) {
                     throw new Error(`Response status: ${response.status}`);
                 }
                 const result = await response.json();
-                setMovies(result.results);
+                if (!ignore) {
+                    setMovies((prev) => [
+                        ...prev,
+                        ...result.results.filter((m: Movie) => !prev.some((p) => p.id === m.id)),
+                    ]);
+                }
             } catch (error) {
                 console.error(error instanceof Error ? error.message : error);
-                setError("Something went wrong.");
+                if (!ignore) setError("Something went wrong.");
             } finally {
-                setLoading(false);
+                if (!ignore) setLoadedUrl(url);
             }
         }
 
         getData();
+
+        return () => {
+            ignore = true;
+        };
     }, [url]);
 
-    return { movies, loading, error };
+    return { movies, loading: loadedUrl !== url, error };
 }

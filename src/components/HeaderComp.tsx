@@ -8,28 +8,26 @@ type HeaderProps = {
 };
 
 const HeaderComponent = ({ searchQuery, onChange }: HeaderProps) => {
-    const { theme, toggleTheme } = useAppContext();
+    const { theme, toggleTheme, favorites } = useAppContext();
 
     return (
         <header className="site-header">
             <div className="header-inner">
-                <div className="header-left">
-                    <div className="brand-logo">
+                <div className="header-actions">
+                    <NavLink to="/" end className="brand-logo">
                         <div className="logo-dot"></div>
                         <span className="logo-text">CINE&middot;GRID</span>
-                    </div>
-                    <nav className="header-nav">
-                        <NavLink to="/" end>Home</NavLink>
-                        <NavLink to="/about">About</NavLink>
+                    </NavLink>
+                    <nav className="header-actions">
+                        <NavLink to="/" end className="genre-pill">Home</NavLink>
+                        <NavLink to="/about" className="genre-pill">About</NavLink>
                     </nav>
                 </div>
 
-                <div className="header-search">
-                    <SearchBar query={searchQuery} onChange={onChange} />
-                </div>
+                <SearchBar query={searchQuery} onChange={onChange} />
 
                 <div className="header-actions">
-                    <button className="btn-icon-label">Watchlist 0</button>
+                    <button className="btn-icon-label">Watchlist {favorites.length}</button>
                     <button className="theme-toggle-btn" onClick={toggleTheme}>
                         {theme === "dark" ? (
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

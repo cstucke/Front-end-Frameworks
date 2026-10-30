@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Movie } from "../types";
 import { getPosterUrl, getBackdropUrl } from "../data/sampleMovies";
 import { getGenreNames } from "../data/genres";
@@ -29,7 +30,12 @@ const MovieModal = ({ movie, onClose }: MovieModalProps) => {
                     <div className="modal-content-details">
                         <h2 className="modal-title" id="modal-movie-title">{movie.title}</h2>
                         <div className="modal-meta-row">
-                            <span className="rating-badge">{movie.vote_average.toFixed(1)}</span>
+                            <span className="rating-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                {movie.vote_average.toFixed(1)}
+                            </span>
                             <span className="modal-meta-item">{movie.release_date}</span>
                         </div>
                         <div className="movie-genres-tags">
@@ -38,6 +44,11 @@ const MovieModal = ({ movie, onClose }: MovieModalProps) => {
                             ))}
                         </div>
                         <p className="modal-overview">{movie.overview}</p>
+                        <div className="modal-footer-actions">
+                            <Link to="/watch" state={{ movie }} className="btn-secondary">
+                                Play
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
