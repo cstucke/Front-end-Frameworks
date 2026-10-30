@@ -2,19 +2,24 @@
 
 A movie browser built with React and TypeScript on the TMDB API, with a full-page player that streams video the way Netflix does.
 
+**Live:** https://front-end-frameworks-rho.vercel.app
+
+![CI](https://github.com/cstucke/Front-end-Frameworks/actions/workflows/ci.yml/badge.svg)
+
 ![CineGrid home page](docs/screenshot.png)
 
 ---
 
 ## Features
 
-- **Browse rows:** Home opens on a featured movie, then horizontal rows such as Trending, Top Rated and Coming Soon. A title appears once on the page, even when TMDB lists it several times.
+- **Browse rows:** Home opens on a featured movie, then a ranked Top 10 and horizontal rows such as Top Rated and Coming Soon. A title appears once in the rows, even when TMDB lists it several times.
 - **Popular movies, endlessly:** below the rows, a grid fetches the next page as you scroll near the bottom.
 - **Genres:** the genre pills swap the rows for one genre, sorted by popularity, rating, date or title. The genre is in the URL (`/?genre=35`).
 - **Search:** searches all of TMDB as you type, from any page.
-- **Title pages:** every movie has its own link, `/movies/:id`, with the runtime, age rating, director, cast, trailer and similar movies. Inside the app it opens over the current page; opened directly, it's a full page.
+- **Title pages:** every movie has its own link, `/movies/:id`, with the runtime, age rating, director, cast, trailer and similar movies, and a Share button. Inside the app it opens over the current page; opened directly, it's a full page.
+- **Where to Watch:** every movie here plays the same demo video, so title pages also show which real services stream it, or rent or sell it, in your region.
 - **Watchlist:** the heart saves a movie to the `/watchlist` page and a row on Home. It's kept between visits.
-- **Continue Watching:** the player remembers where you stopped. Unfinished movies get a row on Home and a progress bar, Play becomes Resume, and a "More Like" row follows the last one you watched.
+- **Continue Watching:** the player remembers where you stopped. Unfinished movies get a row on Home and a progress bar, Play becomes Resume, and a "More Like" row follows the last one you watched. You can remove a movie from the row.
 - **Light and dark themes**, also kept between visits.
 - **Streaming player:** `/watch/:id` plays the video on a full page and starts by itself. A back arrow, the title and the current quality sit at the top; the seek bar, ±10 s, volume, speed, picture-in-picture and fullscreen sit at the bottom. The controls hide when the mouse is idle.
 - **Pause screen:** pausing for two seconds dims the video and shows the movie's details.
@@ -98,7 +103,7 @@ TMDB doesn't host films, so every movie plays the same demo video. The point is 
 The app is set up for [Vercel](https://vercel.com). The browser never talks to TMDB directly: it calls `/api/tmdb`, a Vercel Function that adds the token on the server and only allows the endpoints the app uses.
 
 1. Import the repository into Vercel. It detects Vite, so the build settings can stay as they are.
-2. Add `TMDB_API_KEY` under Environment Variables as a **Secret**.
+2. Add `TMDB_API_KEY` under Environment Variables as a **Secret**. Successful responses are cached on Vercel's CDN for an hour, so repeat visits don't use your TMDB quota.
 3. To deploy a branch other than `main`, change it under Settings → Environments → Production → Branch Tracking.
 
 In `npm run dev` and `npm run preview`, a proxy in `vite.config.ts` does the same job, because Functions only run on Vercel. It has no endpoint allow-list, and it's never deployed.
@@ -128,6 +133,7 @@ vanilaVersion/      # the original plain-JavaScript version the React app was po
 - Every movie plays the same demo video, so Continue Watching tracks each title separately but the picture is always Big Buck Bunny.
 - Opening `/watch/:id` directly (new tab, shared link) may wait for a press of Play, because browsers can block video that starts by itself.
 - The watchlist and watch progress live in the browser's `localStorage`, so they don't follow you to another device.
+- Where to Watch picks the region from the browser's language setting, and uses the US if the language has no region.
 - On iPhones, fullscreen switches to the system player, so the custom controls don't show there.
 
 ---
@@ -135,6 +141,7 @@ vanilaVersion/      # the original plain-JavaScript version the React app was po
 ## Credits
 
 - Movie data and images come from [TMDB](https://www.themoviedb.org). This product uses the TMDB API but is not endorsed or certified by TMDB.
+- Streaming availability comes from [JustWatch](https://www.justwatch.com), through TMDB.
 - The demo video is [Big Buck Bunny](https://peach.blender.org), © 2008 Blender Foundation, licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). The stream is one of Mux's public test streams.
 
 ---

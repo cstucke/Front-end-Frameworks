@@ -2,7 +2,7 @@ import { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Hls from "hls.js";
 import { Movie } from "../types";
-import { getGenreNames } from "../data/genres";
+import { getMovieMeta } from "../data/genres";
 import { useAppContext } from "../context/AppContext";
 import UpNext from "./UpNext";
 import {
@@ -88,6 +88,15 @@ const StreamPlayer = ({ movie, next }: StreamPlayerProps) => {
     // Only a player opened from inside the app has somewhere to go back to
     const goBack = () => (state?.background ? navigate(-1) : navigate(`/movies/${id}`, { replace: true }));
 
+    // In fullscreen, Escape belongs to the browser and only leaves fullscreen
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && !document.fullscreenElement) goBack();
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    });
+
     return (
         <MediaController className="watch-player">
             <video
@@ -113,9 +122,7 @@ const StreamPlayer = ({ movie, next }: StreamPlayerProps) => {
                 <div slot="centered-chrome" className="watch-pause-info">
                     <p className="watch-pause-muted">You&rsquo;re watching</p>
                     <p className="watch-pause-title">{movie.title}</p>
-                    <p className="watch-pause-muted">
-                        {movie.release_date.substring(0, 4)} · &#9733; {movie.vote_average.toFixed(1)} · {getGenreNames(movie.genre_ids).join(", ")}
-                    </p>
+                    <p className="watch-pause-muted">{getMovieMeta(movie)}</p>
                     <p>{movie.overview}</p>
                 </div>
             )}

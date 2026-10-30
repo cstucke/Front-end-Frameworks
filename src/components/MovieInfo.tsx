@@ -5,8 +5,10 @@ import { getGenreNames } from "../data/genres";
 import { genresUrl } from "../data/tmdb";
 import { useAppContext } from "../context/AppContext";
 import { useGenres } from "../hooks/useGenres";
-import { PlayLink, WatchlistButton } from "./MovieActions";
+import { PlayLink, ShareButton, WatchlistButton } from "./MovieActions";
 import MovieRow from "./MovieRow";
+
+const MAX_PROVIDERS = 6;
 
 const formatRuntime = (minutes: number) => `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 
@@ -33,6 +35,9 @@ const MovieInfo = ({ movie, details }: MovieInfoProps) => {
     const certification = getCertification(details);
     const recommendations = details?.recommendations.results ?? [];
     const progress = getProgress(movie.id);
+    const region = navigator.language.split("-")[1] ?? "US";
+    const watchOptions = details?.["watch/providers"].results[region];
+    const providers = watchOptions?.flatrate ?? watchOptions?.rent ?? watchOptions?.buy;
 
     return (
         <>
@@ -56,12 +61,14 @@ const MovieInfo = ({ movie, details }: MovieInfoProps) => {
                     <h2 className="modal-title" id="modal-movie-title">{movie.title}</h2>
                     {details?.tagline && <p className="modal-original-title">{details.tagline}</p>}
                     <div className="modal-meta-row">
-                        <span className="rating-badge">
-                            <svg viewBox="0 0 24 24">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                            </svg>
-                            {movie.vote_average.toFixed(1)}
-                        </span>
+                        {movie.vote_count > 0 && (
+                            <span className="rating-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                {movie.vote_average.toFixed(1)}
+                            </span>
+                        )}
                         <span className="modal-meta-item">{movie.release_date.substring(0, 4)}</span>
                         {details?.runtime ? <span className="modal-meta-item">{formatRuntime(details.runtime)}</span> : null}
                         {certification && <span className="certification-badge">{certification}</span>}
@@ -78,6 +85,7 @@ const MovieInfo = ({ movie, details }: MovieInfoProps) => {
                             <button className="btn-secondary" onClick={() => setShowTrailer(true)}>Trailer</button>
                         )}
                         <WatchlistButton movie={movie} />
+                        <ShareButton movie={movie} />
                     </div>
                     {progress && (
                         <p className="modal-meta-item">
@@ -92,6 +100,25 @@ const MovieInfo = ({ movie, details }: MovieInfoProps) => {
                     )}
                 </div>
             </div>
+            {watchOptions && providers && (
+                <div className="modal-section">
+                    <h3 className="modal-overview-heading">Where to Watch</h3>
+                    <a className="provider-list" href={watchOptions.link} target="_blank" rel="noreferrer">
+                        {providers.slice(0, MAX_PROVIDERS).map((provider) => (
+                            <img
+                                key={provider.provider_id}
+                                className="provider-logo"
+                                src={getPosterUrl(provider.logo_path, "w92")}
+                                alt={provider.provider_name}
+                                title={provider.provider_name}
+                            />
+                        ))}
+                    </a>
+                    <p className="cast-character">
+                        {watchOptions.flatrate ? "Streaming" : "To rent or buy"} · Availability from JustWatch
+                    </p>
+                </div>
+            )}
             {cast.length > 0 && (
                 <div className="modal-section">
                     <h3 className="modal-overview-heading">Cast</h3>

@@ -576,6 +576,49 @@ select {
   scroll-snap-align: start;
 }
 
+.row-track>.ranked-card {
+  flex-basis: clamp(190px, 19vw, 270px);
+}
+
+.ranked-card {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  transition: transform var(--transition-normal);
+}
+
+.ranked-card:hover {
+  transform: translateY(-5px);
+}
+
+.rank-number {
+  position: absolute;
+  left: 0;
+  bottom: -0.08em;
+  color: var(--bg-main);
+  font-size: clamp(6rem, 11vw, 10rem);
+  font-weight: 800;
+  letter-spacing: -0.08em;
+  line-height: 1;
+  -webkit-text-stroke: 3px var(--text-dim);
+  user-select: none;
+}
+
+/* Squeezed so the second digit isn't lost behind the poster */
+.rank-number-wide {
+  transform: scaleX(0.6);
+  transform-origin: left bottom;
+}
+
+.ranked-poster {
+  position: relative;
+  width: 68%;
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: var(--shadow-card);
+}
+
 .row-arrow {
   position: absolute;
   top: 0;
@@ -708,6 +751,7 @@ select {
 .favorite-btn {
   position: relative;
   z-index: 1;
+  margin-left: auto;
   width: 34px;
   height: 34px;
   border-radius: 50%;
@@ -784,6 +828,27 @@ select {
 
 .play-btn:hover {
   transform: scale(1.1);
+}
+
+/* No hover on touch: the heart stays visible, and a tap anywhere on the poster opens the title */
+@media (hover: none) {
+  .poster-overlay {
+    opacity: 1;
+    background: none;
+  }
+
+  .play-btn {
+    display: none;
+  }
+
+  .quick-view-hint {
+    opacity: 0;
+  }
+
+  .movie-card:hover .poster-img {
+    transform: none;
+    filter: none;
+  }
 }
 
 .watch-loading {
@@ -990,6 +1055,19 @@ select {
   margin-top: 4px;
 }
 
+.card-remove-btn {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.card-remove-btn:hover {
+  color: var(--text-main);
+}
+
 .genre-tag {
   font-size: 0.68rem;
   font-weight: 600;
@@ -1190,6 +1268,19 @@ select {
   font-weight: 700;
 }
 
+.provider-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+
+.provider-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+}
+
 .cast-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
@@ -1282,6 +1373,7 @@ select {
 
 .modal-footer-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   margin-top: 8px;

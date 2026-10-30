@@ -12,6 +12,7 @@ import { render, screen, fireEvent, waitFor, within, act } from '@testing-librar
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import App from '../App'
+import ErrorBoundary from '../components/ErrorBoundary'
 import { AppProvider, useAppContext } from '../context/AppContext'
 import type { Movie } from '../types'
 
@@ -36,6 +37,7 @@ const HERO = movie(1, 'Hero Movie')
 const SHARED = movie(2, 'Shared Movie')
 const RATED = movie(3, 'Rated Movie')
 const POPULAR = movie(4, 'Popular Movie')
+const UNRATED = movie(9, 'Unrated Movie', { vote_average: 0, vote_count: 0 })
 const SEARCHED = movie(5, 'Searched Movie')
 const NEXT = movie(6, 'Next Movie')
 
@@ -58,6 +60,14 @@ const DETAILS = {
   },
   videos: { results: [{ key: 'abc123', name: 'Trailer', site: 'YouTube', type: 'Trailer', official: true }] },
   recommendations: { results: [NEXT] },
+  'watch/providers': {
+    results: {
+      US: {
+        link: 'https://www.themoviedb.org/movie/1/watch',
+        flatrate: [{ provider_id: 8, provider_name: 'Netflix', logo_path: '/netflix.jpg' }],
+      },
+    },
+  },
   release_dates: {
     results: [{ iso_3166_1: 'US', release_dates: [{ certification: '' }, { certification: 'PG-13' }] }],
   },
@@ -175,6 +185,66 @@ describe('Home — billboard and rows', () => {
     renderAt('/')
     expect(await screen.findByText(/couldn.t load movies/i)).toBeInTheDocument()
   })
+
+  it('can try again after nothing could be loaded', async () => {
+    let online = false
+    vi.stubGlobal('fetch', vi.fn((input: string) => (online ? fakeTmdb(input) : respond({}, false))))
+    renderAt('/')
+    const retry = await screen.findByRole('button', { name: 'Try again' })
+    online = true
+    fireEvent.click(retry)
+    expect(await screen.findByRole('heading', { name: 'Trending This Week' })).toBeInTheDocument()
+  })
+
+  it('leaves the rating out of the billboard for an unrated title', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/trending/') ? respond({ results: [UNRATED], total_pages: 1 }) : fakeTmdb(input)
+    ))
+    renderAt('/')
+    expect(await screen.findByText('2024 · Action')).toBeInTheDocument()
+  })
+
+  it('leaves the year out of the billboard when there is no date', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/trending/') ? respond({ results: [{ ...HERO, release_date: '' }], total_pages: 1 }) : fakeTmdb(input)
+    ))
+    renderAt('/')
+    expect(await screen.findByText('★ 7.5 · Action')).toBeInTheDocument()
+  })
+})
+
+describe('Home — Top 10', () => {
+  const TRENDING = Array.from({ length: 12 }, (_, i) => movie(100 + i, `Trending ${i + 1}`))
+
+  const stubTrending = (results: Movie[]) =>
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/trending/') ? respond({ results, total_pages: 1 }) : fakeTmdb(input)
+    ))
+
+  it('ranks the top ten trending titles, including the one in the billboard', async () => {
+    stubTrending(TRENDING)
+    renderAt('/')
+    const heading = await screen.findByRole('heading', { name: 'Top 10 This Week' })
+    const links = within(heading.closest('section')!).getAllByRole('link')
+    expect(links).toHaveLength(10)
+    expect(links[0]).toHaveAccessibleName('1. Trending 1')
+    expect(links[0]).toHaveAttribute('href', '/movies/100')
+    expect(links[9]).toHaveAccessibleName('10. Trending 10')
+  })
+
+  it('lets the Trending row carry on from where the Top 10 stops', async () => {
+    stubTrending(TRENDING)
+    renderAt('/')
+    const heading = await screen.findByRole('heading', { name: 'Trending This Week' })
+    const titles = within(heading.closest('section')!).getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(titles).toEqual(['Trending This Week', 'Trending 11', 'Trending 12'])
+  })
+
+  it('does not appear with fewer than ten titles', async () => {
+    renderAt('/')
+    await screen.findByRole('heading', { name: 'Trending This Week' })
+    expect(screen.queryByRole('heading', { name: 'Top 10 This Week' })).not.toBeInTheDocument()
+  })
 })
 
 // ── Title pages ───────────────────────────────────────────────────────────────
@@ -208,6 +278,66 @@ describe('/movies/:id — title page', () => {
     expect(screen.queryByTitle(/trailer/i)).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /trailer/i }))
     expect(screen.getByTitle(/trailer/i)).toHaveAttribute('src', expect.stringContaining('/embed/abc123'))
+  })
+
+  it('shows where the title really streams, credited to JustWatch', async () => {
+    renderAt('/movies/1')
+    const logo = await screen.findByRole('img', { name: 'Netflix' })
+    expect(logo.closest('a')).toHaveAttribute('href', 'https://www.themoviedb.org/movie/1/watch')
+    expect(screen.getByText(/JustWatch/)).toBeInTheDocument()
+  })
+
+  it('falls back to rent or buy when no service streams the title', async () => {
+    const rentOnly = {
+      results: { US: { link: 'https://tmdb.example/watch', rent: [{ provider_id: 2, provider_name: 'Apple TV', logo_path: '/apple.jpg' }] } },
+    }
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/movie/1&') ? respond({ ...DETAILS, 'watch/providers': rentOnly }) : fakeTmdb(input)
+    ))
+    renderAt('/movies/1')
+    expect(await screen.findByRole('img', { name: 'Apple TV' })).toBeInTheDocument()
+    expect(screen.getByText(/rent or buy/i)).toBeInTheDocument()
+  })
+
+  it('keeps the list of services short', async () => {
+    const flatrate = Array.from({ length: 9 }, (_, i) => ({ provider_id: i, provider_name: `Service ${i}`, logo_path: `/${i}.jpg` }))
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/movie/1&')
+        ? respond({ ...DETAILS, 'watch/providers': { results: { US: { link: 'https://tmdb.example/watch', flatrate } } } })
+        : fakeTmdb(input)
+    ))
+    renderAt('/movies/1')
+    await screen.findByRole('img', { name: 'Service 0' })
+    expect(screen.queryByRole('img', { name: 'Service 6' })).not.toBeInTheDocument()
+  })
+
+  it('leaves Where to Watch out when nothing is known for the region', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/movie/1&') ? respond({ ...DETAILS, 'watch/providers': { results: {} } }) : fakeTmdb(input)
+    ))
+    renderAt('/movies/1')
+    await screen.findByText(DETAILS.tagline)
+    expect(screen.queryByText('Where to Watch')).not.toBeInTheDocument()
+  })
+
+  it('leaves the rating out for an unrated title', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/movie/1&') ? respond({ ...DETAILS, vote_average: 0, vote_count: 0 }) : fakeTmdb(input)
+    ))
+    renderAt('/movies/1')
+    await screen.findByText(DETAILS.tagline)
+    expect(screen.queryByText('0.0')).not.toBeInTheDocument()
+  })
+
+  it('copies a link to the title', async () => {
+    const writeText = vi.fn(() => Promise.resolve())
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    renderAt('/movies/1')
+    await screen.findByText(DETAILS.tagline)
+    fireEvent.click(screen.getByRole('button', { name: 'Share' }))
+    expect(await screen.findByRole('button', { name: 'Link copied' })).toBeInTheDocument()
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/movies/1`)
+    Reflect.deleteProperty(navigator, 'clipboard')
   })
 
   it('offers titles like this one', async () => {
@@ -296,6 +426,13 @@ describe('/watch/:id — player', () => {
     window.history.pushState({ usr: { movie: NEXT }, key: 'replaced', idx: 0 }, '', '/watch/1')
     render(<App />)
     fireEvent.click(await screen.findByRole('button', { name: 'Back' }, { timeout: 5000 }))
+    await waitFor(() => expect(window.location.pathname).toBe('/movies/1'))
+  })
+
+  it('leaves on Escape', async () => {
+    renderAt('/watch/1')
+    await screen.findByRole('button', { name: 'Back' }, { timeout: 5000 })
+    fireEvent.keyDown(window, { key: 'Escape' })
     await waitFor(() => expect(window.location.pathname).toBe('/movies/1'))
   })
 
@@ -397,6 +534,28 @@ describe('Genre browsing', () => {
 // ── Infinite scroll ───────────────────────────────────────────────────────────
 
 describe('Infinite grid', () => {
+  it('can retry a page that failed', async () => {
+    let reachBottom: IntersectionObserverCallback = () => {}
+    vi.stubGlobal('IntersectionObserver', vi.fn(function (callback: IntersectionObserverCallback) {
+      reachBottom = callback
+      return { observe: vi.fn(), disconnect: vi.fn() }
+    }))
+    let failing = true
+    vi.stubGlobal('fetch', vi.fn((input: string) => {
+      if (!input.includes('/movie/popular')) return fakeTmdb(input)
+      if (input.includes('page=2') && failing) return respond({}, false)
+      return respond({ results: [POPULAR], total_pages: 2 })
+    }))
+    renderAt('/')
+    await screen.findByRole('heading', { name: 'Popular on CineGrid' })
+    act(() => reachBottom([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver))
+    const retry = await screen.findByRole('button', { name: 'Try again' })
+    failing = false
+    fireEvent.click(retry)
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument())
+    expect(fetchedPaths().filter((p) => p.includes('page=2'))).toHaveLength(2)
+  })
+
   it('stops asking for pages at total_pages', async () => {
     const observe = vi.fn()
     vi.stubGlobal('IntersectionObserver', vi.fn(function () {
@@ -465,6 +624,14 @@ describe('Continue Watching', () => {
     expect(screen.getByRole('progressbar', { name: /half watched/i })).toHaveAttribute('aria-valuenow', '50')
   })
 
+  it('can be removed from the row', async () => {
+    saveWatchProgress([{ movie: movie(7, 'Half Watched'), time: 300, duration: 600 }])
+    renderAt('/')
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove Half Watched from Continue Watching' }))
+    expect(screen.queryByRole('heading', { name: 'Continue Watching' })).not.toBeInTheDocument()
+    expect(JSON.parse(localStorage.getItem('cinegrid_progress')!)).toEqual([])
+  })
+
   it('suggests more like the last movie watched', async () => {
     saveWatchProgress([{ movie: movie(7, 'Half Watched'), time: 300, duration: 600 }])
     renderAt('/')
@@ -527,9 +694,40 @@ describe('AppContext — watch progress', () => {
   })
 })
 
+// ── Staying up when something goes wrong ──────────────────────────────────────
+
+describe('Resilience', () => {
+  it.each([
+    ['invalid JSON', '{oops'],
+    ['the wrong shape', '{"a":1}'],
+  ])('starts normally when saved data is %s', async (_name, saved) => {
+    localStorage.setItem('cinegrid_favorites', saved)
+    localStorage.setItem('cinegrid_progress', saved)
+    renderAt('/watchlist')
+    expect(await screen.findByText(/your watchlist is empty/i)).toBeInTheDocument()
+  })
+
+  it('offers a reload instead of a blank page when a page crashes', () => {
+    const Crash = () => {
+      throw new Error('boom')
+    }
+    render(<ErrorBoundary><Crash /></ErrorBoundary>)
+    expect(screen.getByRole('button', { name: 'Reload' })).toBeInTheDocument()
+  })
+})
+
 // ── Card polish ───────────────────────────────────────────────────────────────
 
 describe('MovieCard', () => {
+  it('leaves the rating out for an unrated title', async () => {
+    vi.stubGlobal('fetch', vi.fn((input: string) =>
+      input.includes('/movie/top_rated') ? respond({ results: [UNRATED], total_pages: 1 }) : fakeTmdb(input)
+    ))
+    renderAt('/')
+    const card = (await screen.findByRole('heading', { name: UNRATED.title })).closest('.movie-card')!
+    expect(within(card as HTMLElement).queryByText('0.0')).not.toBeInTheDocument()
+  })
+
   it('swaps a broken poster for the placeholder', async () => {
     renderAt('/')
     const poster = await screen.findByRole('img', { name: SHARED.title })

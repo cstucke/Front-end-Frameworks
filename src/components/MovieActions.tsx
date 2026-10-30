@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Movie } from "../types";
 import { useAppContext } from "../context/AppContext";
@@ -27,6 +28,27 @@ export const WatchlistButton = ({ movie }: { movie: Movie }) => {
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
             </svg>
             {saved ? "Remove from Watchlist" : "Add to Watchlist"}
+        </button>
+    );
+};
+
+export const ShareButton = ({ movie }: { movie: Movie }) => {
+    const [copied, setCopied] = useState(false);
+
+    const share = async () => {
+        const url = `${window.location.origin}/movies/${movie.id}`;
+        if (navigator.share) {
+            await navigator.share({ title: movie.title, url }).catch(() => {});
+            return;
+        }
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <button className="btn-secondary" onClick={share}>
+            {copied ? "Link copied" : "Share"}
         </button>
     );
 };

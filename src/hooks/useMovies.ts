@@ -7,6 +7,7 @@ export function useMovies(url: string) {
     const [totalPages, setTotalPages] = useState(1);
     const [loadedUrl, setLoadedUrl] = useState("");
     const [error, setError] = useState<string | null>(null);
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let ignore = false;
@@ -34,7 +35,13 @@ export function useMovies(url: string) {
         return () => {
             ignore = true;
         };
-    }, [url]);
+    }, [url, attempt]);
 
-    return { movies, totalPages, loading: loadedUrl !== url, error };
+    const retry = () => {
+        setError(null);
+        setLoadedUrl("");
+        setAttempt((a) => a + 1);
+    };
+
+    return { movies, totalPages, loading: loadedUrl !== url, error, retry };
 }

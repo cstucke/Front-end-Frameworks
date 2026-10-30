@@ -1,11 +1,16 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Movie, Genre } from "../types";
+import { getPosterUrl } from "../data/sampleMovies";
+import { useOverlayState } from "../hooks/useOverlay";
 import MovieCard from "./MovieCard";
 
 type MovieRowProps = {
     title: string;
     movies: Movie[];
     genres?: Genre[];
+    ranked?: boolean;
+    onRemove?: (movie: Movie) => void;
 };
 
 export const SkeletonCards = ({ count }: { count: number }) => (
@@ -16,7 +21,23 @@ export const SkeletonCards = ({ count }: { count: number }) => (
     </>
 );
 
-const MovieRow = ({ title, movies, genres = [] }: MovieRowProps) => {
+const RankedCard = ({ movie, rank }: { movie: Movie; rank: number }) => {
+    const overlayState = useOverlayState();
+
+    return (
+        <Link
+            to={`/movies/${movie.id}`}
+            state={overlayState(movie)}
+            className="ranked-card"
+            aria-label={`${rank}. ${movie.title}`}
+        >
+            <span className={`rank-number${rank > 9 ? " rank-number-wide" : ""}`}>{rank}</span>
+            <img className="ranked-poster" src={getPosterUrl(movie.poster_path)} alt="" loading="lazy" />
+        </Link>
+    );
+};
+
+const MovieRow = ({ title, movies, genres = [], ranked = false, onRemove }: MovieRowProps) => {
     const trackRef = useRef<HTMLDivElement>(null);
     const [canScroll, setCanScroll] = useState({ left: false, right: false });
 
@@ -44,9 +65,13 @@ const MovieRow = ({ title, movies, genres = [] }: MovieRowProps) => {
                     </button>
                 )}
                 <div className="row-track" ref={trackRef} onScroll={updateArrows}>
-                    {movies.map((movie) => (
-                        <MovieCard key={movie.id} movie={movie} genres={genres} />
-                    ))}
+                    {movies.map((movie, i) =>
+                        ranked ? (
+                            <RankedCard key={movie.id} movie={movie} rank={i + 1} />
+                        ) : (
+                            <MovieCard key={movie.id} movie={movie} genres={genres} onRemove={onRemove} />
+                        ),
+                    )}
                 </div>
                 {canScroll.right && (
                     <button className="row-arrow row-arrow-right" tabIndex={-1} aria-label={`Scroll ${title} right`} onClick={() => scrollPage(1)}>

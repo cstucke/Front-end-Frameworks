@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Genre, Movie, MovieDetails } from "../types";
 import { tmdbFetch, tmdbUrl } from "../data/tmdb";
 
-const APPENDED = "credits,videos,recommendations,release_dates";
+const APPENDED = "credits,videos,recommendations,release_dates,watch/providers";
 
 // The plain Movie part of a details response, which is what gets saved to localStorage.
 // /movie/{id} sends genres where the lists send genre_ids.

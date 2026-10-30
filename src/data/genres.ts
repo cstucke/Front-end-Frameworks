@@ -1,3 +1,5 @@
+import { Movie } from "../types";
+
 export const GENRES: {[key: number]: string} = {
   28: "Action",
   12: "Adventure",
@@ -23,4 +25,10 @@ export const GENRES: {[key: number]: string} = {
 export function getGenreNames(genreIds: number[] = []) {
   if (!genreIds || !genreIds.length) return ["General"];
   return genreIds.map(id => GENRES[id] || "Other");
+}
+
+export function getMovieMeta(movie: Movie) {
+  const year = movie.release_date.substring(0, 4);
+  const rating = movie.vote_count > 0 ? `★ ${movie.vote_average.toFixed(1)}` : "";
+  return [year, rating, getGenreNames(movie.genre_ids).join(", ")].filter(Boolean).join(" · ");
 }

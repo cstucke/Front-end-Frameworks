@@ -3,6 +3,9 @@
 
 const TMDB_BASE_URL = "https://api.themoviedb.org/3";
 
+// TMDB's data barely changes, so Vercel's CDN can answer repeat requests without running this
+const CACHE_CONTROL = "public, s-maxage=3600, stale-while-revalidate=86400";
+
 // Only the endpoints the app reads, so this route can't reach the rest of TMDB with our token
 const ALLOWED_PATHS =
     /^\/(trending\/movie\/week|genre\/movie\/list|search\/movie|discover\/movie|movie\/(popular|now_playing|top_rated|upcoming|\d+(\/recommendations)?))$/;
@@ -30,7 +33,10 @@ export default {
 
         return new Response(await response.text(), {
             status: response.status,
-            headers: { "content-type": "application/json" },
+            headers: {
+                "content-type": "application/json",
+                ...(response.ok && { "cache-control": CACHE_CONTROL }),
+            },
         });
     },
 };

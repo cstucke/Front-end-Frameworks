@@ -12,13 +12,18 @@ const MoreLike = ({ movie, genres }: { movie: Movie; genres: Genre[] }) => {
 };
 
 const PersonalRows = ({ genres }: { genres: Genre[] }) => {
-    const { progress, favorites } = useAppContext();
+    const { progress, favorites, removeProgress } = useAppContext();
     const lastWatched = progress[0]?.movie;
 
     return (
         <>
             {progress.length > 0 && (
-                <MovieRow title="Continue Watching" movies={progress.map((p) => p.movie)} genres={genres} />
+                <MovieRow
+                    title="Continue Watching"
+                    movies={progress.map((p) => p.movie)}
+                    genres={genres}
+                    onRemove={(movie) => removeProgress(movie.id)}
+                />
             )}
             {favorites.length > 0 && <MovieRow title="Your Watchlist" movies={favorites} genres={genres} />}
             {lastWatched && <MoreLike key={lastWatched.id} movie={lastWatched} genres={genres} />}

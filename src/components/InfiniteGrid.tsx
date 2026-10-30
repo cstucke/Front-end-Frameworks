@@ -16,7 +16,7 @@ type InfiniteGridProps = {
 // useMovies appends, so give this a `key` that changes with the list to start it over.
 const InfiniteGrid = ({ url, title, genres = [], exclude }: InfiniteGridProps) => {
     const [page, setPage] = useState(1);
-    const { movies, totalPages, loading, error } = useMovies(`${url}&page=${page}`);
+    const { movies, totalPages, loading, error, retry } = useMovies(`${url}&page=${page}`);
     const loaderRef = useRef<HTMLDivElement>(null);
     const hasMore = page < Math.min(totalPages, TMDB_PAGE_LIMIT);
     const visible = exclude ? movies.filter((m) => !exclude.has(m.id)) : movies;
@@ -48,7 +48,12 @@ const InfiniteGrid = ({ url, title, genres = [], exclude }: InfiniteGridProps) =
                     <SkeletonCards count={6} />
                 </div>
             )}
-            {error && <p className="empty-text">Couldn&rsquo;t load more movies.</p>}
+            {error && (
+                <div className="empty-state">
+                    <p className="empty-text">Couldn&rsquo;t load more movies.</p>
+                    <button className="btn-secondary" onClick={retry}>Try again</button>
+                </div>
+            )}
             <div ref={loaderRef}></div>
         </section>
     );

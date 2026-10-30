@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Outlet, useLocation, useNavigationType } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 import HeaderComponent from "./components/HeaderComp";
 import MovieModal from "./components/MovieModal";
 import HomePage from "./pages/HomePage";
@@ -77,11 +78,13 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <AppProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AppProvider>
+    </ErrorBoundary>
   );
 };
 

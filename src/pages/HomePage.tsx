@@ -35,7 +35,7 @@ const HomePage = ({ searchQuery = "" }: { searchQuery?: string }) => {
     const genreId = params.get("genre");
     const sort = (params.get("sort") ?? "popularity") as SortOption;
     const { genres } = useGenres(genresUrl);
-    const { hero, rows, seen, loading, error } = useBrowseRows();
+    const { hero, top10, rows, seen, loading, error, retry } = useBrowseRows();
     const genreName = genres.find((g) => String(g.id) === genreId)?.name;
 
     useEffect(() => {
@@ -75,11 +75,13 @@ const HomePage = ({ searchQuery = "" }: { searchQuery?: string }) => {
                         {error && (
                             <div className="empty-state">
                                 <p className="empty-text">We couldn&rsquo;t load movies right now. Check your connection and try again.</p>
+                                <button className="btn-secondary" onClick={retry}>Try again</button>
                             </div>
                         )}
                         {!loading && !error && (
                             <>
                                 <PersonalRows genres={genres} />
+                                {top10.length > 0 && <MovieRow title="Top 10 This Week" movies={top10} ranked />}
                                 {rows.map((row) => (
                                     <MovieRow key={row.title} title={row.title} movies={row.movies} genres={genres} />
                                 ))}

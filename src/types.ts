@@ -39,6 +39,12 @@ export interface Video {
     official: boolean;
 }
 
+export interface WatchProvider {
+    provider_id: number;
+    provider_name: string;
+    logo_path: string;
+}
+
 export interface MovieDetails extends Movie {
     tagline: string;
     runtime: number | null;
@@ -46,6 +52,9 @@ export interface MovieDetails extends Movie {
     credits: { cast: CastMember[]; crew: CrewMember[] };
     videos: { results: Video[] };
     recommendations: { results: Movie[] };
+    "watch/providers": {
+        results: Record<string, { link: string; flatrate?: WatchProvider[]; rent?: WatchProvider[]; buy?: WatchProvider[] }>;
+    };
     release_dates: {
         results: { iso_3166_1: string; release_dates: { certification: string }[] }[];
     };

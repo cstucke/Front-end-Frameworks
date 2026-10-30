@@ -15,6 +15,7 @@ const SearchBar = ({ query, onChange }: SearchBarProps) => {
                     className="search-input"
                     type="text"
                     placeholder="Search movies..."
+                    aria-label="Search movies"
                     value={query}
                     onChange={(e) => onChange(e.target.value)}
                     autoComplete="off"

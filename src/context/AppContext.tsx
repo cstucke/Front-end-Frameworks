@@ -15,7 +15,8 @@ type State = {
 type Action =
     | { type: "SET_THEME" }
     | { type: "TOGGLE_FAVOURITE"; payload: Movie }
-    | { type: "SAVE_PROGRESS"; payload: WatchProgress };
+    | { type: "SAVE_PROGRESS"; payload: WatchProgress }
+    | { type: "REMOVE_PROGRESS"; payload: number };
 
 // 2. Reducer — pure function, no side effects
 const reducer = (state: State, action: Action): State => {
@@ -43,6 +44,11 @@ const reducer = (state: State, action: Action): State => {
                 progress: time / duration >= FINISHED_RATIO ? others : [action.payload, ...others],
             };
         }
+        case "REMOVE_PROGRESS":
+            return {
+                ...state,
+                progress: state.progress.filter((p) => p.movie.id !== action.payload),
+            };
         default:
             return state;
     }
@@ -58,27 +64,30 @@ type AppContextType = {
     progress: WatchProgress[];
     saveProgress: (movie: Movie, time: number, duration: number) => void;
     getProgress: (id: number) => WatchProgress | undefined;
+    removeProgress: (id: number) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+// Saved data can be damaged or from an older version; a bad value must not stop the app starting
+function readSavedList<T>(key: string): T[] {
+    try {
+        const saved = JSON.parse(localStorage.getItem(key) ?? "[]");
+        return Array.isArray(saved) ? saved : [];
+    } catch {
+        return [];
+    }
+}
 
 // 4. Provider — wraps the app, owns the state
 export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const initialTheme =
         (localStorage.getItem("cinegrid_theme") as Theme) || "dark";
 
-    const initialFavorites: Movie[] = JSON.parse(
-        localStorage.getItem("cinegrid_favorites") || "[]"
-    );
-
-    const initialProgress: WatchProgress[] = JSON.parse(
-        localStorage.getItem("cinegrid_progress") || "[]"
-    );
-
     const [state, dispatch] = useReducer(reducer, {
         theme: initialTheme,
-        favorites: initialFavorites,
-        progress: initialProgress,
+        favorites: readSavedList<Movie>("cinegrid_favorites"),
+        progress: readSavedList<WatchProgress>("cinegrid_progress"),
     });
 
     // Sync to localStorage + DOM whenever theme changes
@@ -111,6 +120,9 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     const getProgress = (id: number) =>
         state.progress.find((p) => p.movie.id === id);
 
+    const removeProgress = (id: number) =>
+        dispatch({ type: "REMOVE_PROGRESS", payload: id });
+
     return (
         <AppContext.Provider
             value={{
@@ -122,6 +134,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
                 progress: state.progress,
                 saveProgress,
                 getProgress,
+                removeProgress,
             }}
         >
             {children}

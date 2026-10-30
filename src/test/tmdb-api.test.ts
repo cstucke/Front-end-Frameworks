@@ -43,6 +43,17 @@ describe('/api/tmdb', () => {
     expect(await response.json()).toEqual({ results: [] })
   })
 
+  it('lets the CDN cache a good response', async () => {
+    const response = await callApi('path=/genre/movie/list')
+    expect(response.headers.get('cache-control')).toContain('s-maxage=')
+  })
+
+  it('never caches an error', async () => {
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(Response.json({}, { status: 500 }))))
+    const response = await callApi('path=/genre/movie/list')
+    expect(response.headers.get('cache-control')).toBeNull()
+  })
+
   it('passes on a TMDB error status', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(Response.json({}, { status: 404 }))))
     const response = await callApi('path=/movie/999999999')

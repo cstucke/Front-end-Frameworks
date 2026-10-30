@@ -7,9 +7,10 @@ import { Link } from "react-router-dom"
 type MovieCardProps = {
     movie: Movie;
     genres?: Genre[];
+    onRemove?: (movie: Movie) => void;
 };
 
-const MovieCard = ({ movie, genres = [] }: MovieCardProps) => {
+const MovieCard = ({ movie, genres = [], onRemove }: MovieCardProps) => {
     const { toggleFavorite, isFavorite, getProgress } = useAppContext();
     const overlayState = useOverlayState();
     const progress = getProgress(movie.id);
@@ -31,12 +32,14 @@ const MovieCard = ({ movie, genres = [] }: MovieCardProps) => {
                 />
                 <div className="poster-overlay">
                     <div className="card-top-badges">
-                        <span className="rating-badge">
-                            <svg viewBox="0 0 24 24">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                            </svg>
-                            {movie.vote_average.toFixed(1)}
-                        </span>
+                        {movie.vote_count > 0 && (
+                            <span className="rating-badge">
+                                <svg viewBox="0 0 24 24">
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                </svg>
+                                {movie.vote_average.toFixed(1)}
+                            </span>
+                        )}
                         <button
                             className={`favorite-btn${isFavorite(movie.id) ? " is-favorite" : ""}`}
                             title={isFavorite(movie.id) ? "Remove from Favourites" : "Add to Favourites"}
@@ -88,6 +91,15 @@ const MovieCard = ({ movie, genres = [] }: MovieCardProps) => {
                         <span key={genre} className="genre-tag">{genre}</span>
                     ))}
                 </div>
+                {onRemove && (
+                    <button
+                        className="card-remove-btn"
+                        aria-label={`Remove ${movie.title} from Continue Watching`}
+                        onClick={() => onRemove(movie)}
+                    >
+                        Remove from row
+                    </button>
+                )}
             </div>
         </section>
     )

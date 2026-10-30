@@ -12,10 +12,14 @@ const ROWS = [
     { title: "Out of This World", path: "/discover/movie?language=en-US&sort_by=popularity.desc&with_genres=878" },
 ];
 
+const TOP_SIZE = 10;
+
 // TMDB's lists overlap heavily. Each title appears once on the page, in the first row that has it.
 function buildPage(lists: Movie[][]) {
-    const hero = lists[0].find((m) => m.backdrop_path);
-    const seen = new Set<number>(hero ? [hero.id] : []);
+    const [trending] = lists;
+    const hero = trending.find((m) => m.backdrop_path);
+    const top10 = trending.length >= TOP_SIZE ? trending.slice(0, TOP_SIZE) : [];
+    const seen = new Set<number>([...top10, ...(hero ? [hero] : [])].map((m) => m.id));
 
     const rows = ROWS.map((row, i) => {
         const movies = lists[i].filter((m) => !seen.has(m.id));
@@ -23,11 +27,12 @@ function buildPage(lists: Movie[][]) {
         return { title: row.title, movies };
     }).filter((row) => row.movies.length > 0);
 
-    return { hero, rows, seen };
+    return { hero, top10, rows, seen };
 }
 
 export function useBrowseRows() {
     const [lists, setLists] = useState<Movie[][] | null>(null);
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let ignore = false;
@@ -44,15 +49,22 @@ export function useBrowseRows() {
         return () => {
             ignore = true;
         };
-    }, []);
+    }, [attempt]);
+
+    const retry = () => {
+        setLists(null);
+        setAttempt((a) => a + 1);
+    };
 
     const page = useMemo(() => (lists ? buildPage(lists) : null), [lists]);
 
     return {
         hero: page?.hero,
+        top10: page?.top10 ?? [],
         rows: page?.rows ?? [],
         seen: page?.seen,
         loading: !lists,
         error: page !== null && page.rows.length === 0 && !page.hero,
+        retry,
     };
 }
