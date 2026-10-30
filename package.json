@@ -15,7 +15,7 @@
     "test:m1": "vitest run src/test/milestone-01.test.tsx",
     "test:m2": "vitest run src/test/milestone-02.test.tsx",
     "test:m3": "vitest run src/test/milestone-03.test.tsx",
-    "test:features": "vitest run src/test/features.test.tsx"
+    "test:features": "vitest run src/test/features.test.tsx src/test/tmdb-api.test.ts"
   },
   "dependencies": {
     "hls.js": "^1.7.4",

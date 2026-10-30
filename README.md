@@ -51,7 +51,7 @@ npm install
 ```bash
 cp .env.example .env
 ```
-Open `.env` and set `VITE_TMDB_API_KEY` to your **API Read Access Token**: the long token under TMDB Settings → API, not the short API key. The other values can stay as they are.
+Open `.env` and set `TMDB_API_KEY` to your **API Read Access Token**: the long token under TMDB Settings → API, not the short API key. Keep that name: anything starting with `VITE_` is built into the public JavaScript.
 
 **3. Start the dev server**
 ```bash
@@ -74,7 +74,7 @@ npm run test             # Tests in watch mode
 npm run test:run         # Run all tests once
 npm run test:m2          # Milestone 2 suite
 npm run test:m3          # Milestone 3 suite
-npm run test:features    # Rows, title pages, search, watchlist, resume
+npm run test:features    # Rows, title pages, search, watchlist, resume, API route
 ```
 
 The milestone 1 suite (`npm run test:m1`) was written before favourites moved into the global context in Session 5, so it no longer passes. The milestone 2, milestone 3 and features suites pass.
@@ -93,9 +93,22 @@ TMDB doesn't host films, so every movie plays the same demo video. The point is 
 
 ---
 
+## Deploying
+
+The app is set up for [Vercel](https://vercel.com). The browser never talks to TMDB directly: it calls `/api/tmdb`, a Vercel Function that adds the token on the server and only allows the endpoints the app uses.
+
+1. Import the repository into Vercel. It detects Vite, so the build settings can stay as they are.
+2. Add `TMDB_API_KEY` under Environment Variables as a **Secret**.
+3. To deploy a branch other than `main`, change it under Settings → Environments → Production → Branch Tracking.
+
+In `npm run dev` and `npm run preview`, a proxy in `vite.config.ts` does the same job, because Functions only run on Vercel. It has no endpoint allow-list, and it's never deployed.
+
+---
+
 ## Project structure
 
 ```
+api/                # tmdb.js: the Vercel Function that holds the TMDB token
 src/
 ├── components/     # header, Billboard, MovieRow, InfiniteGrid, MovieCard, MovieInfo, MovieModal, StreamPlayer, ...
 ├── context/        # AppContext: theme, favourites and watch progress (useReducer + localStorage)

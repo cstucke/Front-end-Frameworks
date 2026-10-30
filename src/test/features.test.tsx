@@ -69,8 +69,8 @@ const respond = (body: unknown, ok = true) =>
   Promise.resolve({ ok, status: ok ? 200 : 404, json: () => Promise.resolve(body) })
 
 const fakeTmdb = (input: string) => {
-  const url = new URL(input)
-  const path = url.pathname.replace('/3', '')
+  const url = new URL(input, 'http://localhost')
+  const path = url.searchParams.get('path') ?? ''
 
   if (path === '/genre/movie/list') {
     return respond({ genres: [{ id: 28, name: 'Action' }, { id: 35, name: 'Comedy' }] })
@@ -90,10 +90,7 @@ const fakeTmdb = (input: string) => {
 }
 
 const fetchedPaths = () =>
-  vi.mocked(fetch).mock.calls.map(([input]) => {
-    const url = new URL(String(input))
-    return url.pathname.replace('/3', '') + url.search
-  })
+  vi.mocked(fetch).mock.calls.map(([input]) => String(input).replace('/api/tmdb?path=', '').replace('&', '?'))
 
 const renderAt = (path: string) => {
   window.history.pushState({}, '', path)
@@ -114,6 +111,19 @@ afterEach(() => {
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   window.history.pushState({}, '', '/')
+})
+
+// ── API token ─────────────────────────────────────────────────────────────────
+
+describe('TMDB requests', () => {
+  it('go through our own API route, with no token in the browser', async () => {
+    renderAt('/')
+    await screen.findByRole('heading', { name: 'Trending This Week' })
+    for (const [input, init] of vi.mocked(fetch).mock.calls) {
+      expect(String(input)).toMatch(/^\/api\/tmdb\?path=\//)
+      expect(init?.headers).not.toHaveProperty('Authorization')
+    }
+  })
 })
 
 // ── Home: billboard and rows ──────────────────────────────────────────────────
